@@ -1,0 +1,18 @@
+namespace Sunshine.Foveation;
+
+table GazePacket {
+  protocol_version:uint = 1;
+  sequence:ulong;
+  tracker_timestamp:double;
+  center_x:float;
+  center_y:float;
+  radius_level_1:float;
+  radius_level_2:float;
+  radius_level_3:float;
+  radius_level_4:float;
+  confidence:ubyte;
+  valid:bool;
+}
+
+root_type GazePacket;
+file_identifier "BGZ1";

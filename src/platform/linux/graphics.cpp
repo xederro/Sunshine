@@ -12,6 +12,7 @@
 // local includes
 #include "graphics.h"
 #include "src/file_handler.h"
+#include "src/foveation.h"
 #include "src/logging.h"
 #include "src/video.h"
 
@@ -1486,6 +1487,32 @@ namespace egl {
   }
 
   int sws_t::convert_nv12(gl::frame_buf_t &fb) {
+    // Apply gaze foveation in the EGL shader path. This samples and filters the
+    // GPU texture directly; no captured-frame pixels are read or blurred by CPU.
+    const auto gaze = foveation::latest_state();
+    const auto blur_color = foveation::blur_color();
+    const std::array<int, 2> shader_indices {0, 1};
+    for (const auto index : shader_indices) {
+      const auto program_handle = program[index].handle();
+      const auto enabled_location = gl::ctx.GetUniformLocation(program_handle, "gaze_enabled");
+      const auto center_location = gl::ctx.GetUniformLocation(program_handle, "gaze_center");
+      const auto radii_location = gl::ctx.GetUniformLocation(program_handle, "gaze_radii");
+      const auto texel_location = gl::ctx.GetUniformLocation(program_handle, "gaze_texel_size");
+      const auto color_location = gl::ctx.GetUniformLocation(program_handle, "gaze_blur_color");
+      const auto tint_location = gl::ctx.GetUniformLocation(program_handle, "gaze_tint_enabled");
+      gl::ctx.UseProgram(program_handle);
+      gl::ctx.Uniform1i(enabled_location, gaze ? 1 : 0);
+      gl::ctx.Uniform1i(tint_location, blur_color ? 1 : 0);
+      if (blur_color) {
+        gl::ctx.Uniform3fv(color_location, 1, blur_color->data());
+      }
+      if (gaze) {
+        gl::ctx.Uniform2f(center_location, gaze->center_x, gaze->center_y);
+        gl::ctx.Uniform4fv(radii_location, 1, gaze->radii.data());
+        gl::ctx.Uniform2f(texel_location, 1.0f / in_width, 1.0f / in_height);
+      }
+    }
+
     gl::ctx.BindTexture(GL_TEXTURE_2D, loaded_texture);
 
     std::array<GLenum, 2> attachments {
@@ -1508,6 +1535,29 @@ namespace egl {
   }
 
   int sws_t::convert_yuv444(gl::frame_buf_t &fb) {
+    const auto gaze = foveation::latest_state();
+    const auto blur_color = foveation::blur_color();
+    for (int index = 0; index < 3; ++index) {
+      const auto program_handle = program[index].handle();
+      const auto enabled_location = gl::ctx.GetUniformLocation(program_handle, "gaze_enabled");
+      const auto center_location = gl::ctx.GetUniformLocation(program_handle, "gaze_center");
+      const auto radii_location = gl::ctx.GetUniformLocation(program_handle, "gaze_radii");
+      const auto texel_location = gl::ctx.GetUniformLocation(program_handle, "gaze_texel_size");
+      const auto color_location = gl::ctx.GetUniformLocation(program_handle, "gaze_blur_color");
+      const auto tint_location = gl::ctx.GetUniformLocation(program_handle, "gaze_tint_enabled");
+      gl::ctx.UseProgram(program_handle);
+      gl::ctx.Uniform1i(enabled_location, gaze ? 1 : 0);
+      gl::ctx.Uniform1i(tint_location, blur_color ? 1 : 0);
+      if (blur_color) {
+        gl::ctx.Uniform3fv(color_location, 1, blur_color->data());
+      }
+      if (gaze) {
+        gl::ctx.Uniform2f(center_location, gaze->center_x, gaze->center_y);
+        gl::ctx.Uniform4fv(radii_location, 1, gaze->radii.data());
+        gl::ctx.Uniform2f(texel_location, 1.0f / in_width, 1.0f / in_height);
+      }
+    }
+
     gl::ctx.BindTexture(GL_TEXTURE_2D, loaded_texture);
 
     std::array<GLenum, 3> attachments {

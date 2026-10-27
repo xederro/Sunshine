@@ -26,6 +26,7 @@ extern "C" {
 
 #include "graphics.h"
 #include "src/config.h"
+#include "src/foveation.h"
 #include "src/logging.h"
 #include "src/video_colorspace.h"
 #include "vulkan_encode.h"
@@ -399,6 +400,10 @@ namespace vk {
     std::array<int32_t, 2> cursor_pos;  ///< Cursor pos.
     std::array<int32_t, 2> cursor_size;  ///< Cursor size.
     int32_t y_invert;  ///< Y invert.
+    int32_t gaze_enabled;  ///< Whether a fresh gaze sample is available.
+    std::array<float, 4> gaze_center_tint;  ///< Gaze center and enabled flags.
+    std::array<float, 4> gaze_radii;  ///< Gaze blur radii.
+    std::array<float, 4> gaze_blur_color;  ///< RGB tint color.
   };
 
 // Helper to check VkResult
@@ -697,6 +702,16 @@ namespace vk {
       push.dst_full_size[0] = frame->width;
       push.dst_full_size[1] = frame->height;
       push.y_invert = descriptor.y_invert ? 1 : 0;
+
+      const auto gaze = foveation::latest_state();
+      const auto blur_color = foveation::blur_color();
+      push.gaze_enabled = gaze ? 1 : 0;
+      push.gaze_center_tint[0] = gaze ? gaze->center_x : 0.5f;
+      push.gaze_center_tint[1] = gaze ? (descriptor.y_invert ? 1.0f - gaze->center_y : gaze->center_y) : 0.5f;
+      push.gaze_center_tint[2] = blur_color ? 1.0f : 0.0f;
+      push.gaze_center_tint[3] = 0.0f;
+      push.gaze_radii = gaze ? gaze->radii : std::array<float, 4> {};
+      push.gaze_blur_color = blur_color ? std::array<float, 4> {(*blur_color)[0], (*blur_color)[1], (*blur_color)[2], 0.0f} : std::array<float, 4> {};
 
       if (descriptor.data) {
         float scale_x = (float) eff_w / width;

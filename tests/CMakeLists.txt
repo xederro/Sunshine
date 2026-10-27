@@ -276,6 +276,10 @@ if(GCOV_LINK_LIBRARY)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${TEST_LINK_LIBRARIES})
+target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src/foveation.cpp")
+add_dependencies(${PROJECT_NAME} gaze-protocol-generated)
+target_include_directories(${PROJECT_NAME} PRIVATE "${GAZE_PROTOCOL_GENERATED_DIR}")
+target_link_libraries(${PROJECT_NAME} flatbuffers)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${SUNSHINE_DEFINITIONS} ${TEST_DEFINITIONS})
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${SUNSHINE_COMPILE_OPTIONS}>;$<$<COMPILE_LANGUAGE:CUDA>:${SUNSHINE_COMPILE_OPTIONS_CUDA};-std=c++17>)  # cmake-lint: disable=C0301
 target_link_options(${PROJECT_NAME} PRIVATE ${SUNSHINE_LINK_OPTIONS})

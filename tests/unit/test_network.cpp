@@ -6,6 +6,9 @@
 // test includes
 #include "../tests_common.h"
 
+// lib includes
+#include <boost/asio.hpp>
+
 // local includes
 #include <src/network.h>
 
@@ -30,6 +33,20 @@ TEST(NetworkClassificationTest, ClassifiesMappedIpv4AddressesWithoutChangingSubs
     EXPECT_EQ(net::from_address(std::string {"::ffff:"} + address), expected);
     EXPECT_EQ(net::from_address(address), expected);
   }
+}
+
+/**
+ * @brief A failed ENet bind returns an empty host instead of dereferencing it.
+ */
+TEST(NetworkHostCreateTest, ReturnsEmptyHostWhenPortIsAlreadyBound) {
+  boost::asio::io_context io;
+  boost::asio::ip::udp::socket socket(io, {boost::asio::ip::udp::v4(), 0});
+  const auto port = socket.local_endpoint().port();
+  ENetAddress address {};
+
+  const auto host = net::host_create(net::IPV4, address, port);
+
+  EXPECT_FALSE(host);
 }
 
 struct MdnsInstanceNameTest: BaseTest, testing::WithParamInterface<std::tuple<std::string, std::string>> {};

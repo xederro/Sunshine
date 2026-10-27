@@ -28,6 +28,7 @@ extern "C" {
 #include "cbs.h"
 #include "config.h"
 #include "display_device.h"
+#include "foveation.h"
 #include "globals.h"
 #include "input.h"
 #include "logging.h"
@@ -2968,6 +2969,7 @@ namespace video {
     config_t config,
     stream::session_t *channel_data
   ) {
+    foveation::start_receiver();
     config = resolve_dynamic_range(*chosen_encoder, config);
 
     auto idr_events = mail->event<bool>(mail::idr);

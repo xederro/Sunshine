@@ -6,6 +6,9 @@ if(APPLE AND NOT SUNSHINE_BUILD_HOMEBREW)
 else()
     add_executable(sunshine ${SUNSHINE_TARGET_FILES})
 endif()
+add_dependencies(sunshine gaze-protocol-generated)
+target_include_directories(sunshine PRIVATE "${GAZE_PROTOCOL_GENERATED_DIR}")
+target_link_libraries(sunshine PRIVATE flatbuffers)
 foreach(dep ${SUNSHINE_TARGET_DEPENDENCIES})
     add_dependencies(sunshine ${dep})  # compile these before sunshine
 endforeach()
@@ -23,7 +26,7 @@ elseif(UNIX)
     endif()
 endif()
 
-target_link_libraries(sunshine ${SUNSHINE_EXTERNAL_LIBRARIES} ${EXTRA_LIBS})
+target_link_libraries(sunshine PRIVATE ${SUNSHINE_EXTERNAL_LIBRARIES} ${EXTRA_LIBS})
 target_compile_definitions(sunshine PUBLIC ${SUNSHINE_DEFINITIONS})
 
 # CLion complains about unknown flags after running cmake, and cannot add symbols to the index for cuda files

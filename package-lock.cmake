@@ -33,6 +33,15 @@
 
 set(PATCH_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/patches")
 
+# FlatBuffers gaze packet protocol
+# renovate: datasource=github-tags depName=google/flatbuffers
+set(FLATBUFFERS_VERSION v25.2.10)
+CPMDeclarePackage(FlatBuffers
+        NAME FlatBuffers
+        GITHUB_REPOSITORY google/flatbuffers
+        GIT_TAG ${FLATBUFFERS_VERSION}
+)
+
 # Boost
 # renovate: datasource=github-release-attachments depName=boostorg/boost
 # versioning=regex:^boost-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<prerelease>\.[A-Za-z0-9.-]+)?$

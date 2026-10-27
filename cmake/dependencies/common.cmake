@@ -1,6 +1,25 @@
 # load common dependencies
 # this file will also load platform specific dependencies
 
+# FlatBuffers is used for the optional out-of-band gaze control channel.
+set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "Build FlatBuffers tests" FORCE)
+set(FLATBUFFERS_BUILD_FLATC ON CACHE BOOL "Build the FlatBuffers compiler" FORCE)
+set(FLATBUFFERS_INSTALL OFF CACHE BOOL "Install FlatBuffers" FORCE)
+CPMGetPackage(FlatBuffers)
+if(NOT TARGET flatbuffers)
+    add_subdirectory("${FlatBuffers_SOURCE_DIR}" "${FlatBuffers_BINARY_DIR}" EXCLUDE_FROM_ALL)
+endif()
+
+set(GAZE_PROTOCOL_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated/gaze")
+file(MAKE_DIRECTORY "${GAZE_PROTOCOL_GENERATED_DIR}")
+add_custom_command(
+        OUTPUT "${GAZE_PROTOCOL_GENERATED_DIR}/gaze_packet_generated.h"
+        COMMAND $<TARGET_FILE:flatc> --cpp --scoped-enums -o "${GAZE_PROTOCOL_GENERATED_DIR}" "${CMAKE_SOURCE_DIR}/protocol/gaze_packet.fbs"
+        DEPENDS flatc "${CMAKE_SOURCE_DIR}/protocol/gaze_packet.fbs"
+        VERBATIM
+)
+add_custom_target(gaze-protocol-generated DEPENDS "${GAZE_PROTOCOL_GENERATED_DIR}/gaze_packet_generated.h")
+
 # Resolve OpenSSL before subprojects run their own find_package(OpenSSL) calls.
 # This ensures a user-provided OPENSSL_ROOT_DIR is honored consistently.
 find_package(OpenSSL REQUIRED)

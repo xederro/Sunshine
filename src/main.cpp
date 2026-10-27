@@ -35,6 +35,7 @@
 #include "confighttp.h"
 #include "display_device.h"
 #include "entry_handler.h"
+#include "foveation.h"
 #include "globals.h"
 #include "httpcommon.h"
 #include "logging.h"
@@ -283,6 +284,8 @@ int main(int argc, char *argv[]) {
 
     return fn->second(argv[0], config::sunshine.cmd.argc, config::sunshine.cmd.argv);
   }
+
+  foveation::start_receiver();
 
 #ifdef _WIN32
   config::select_all_gamepad_drivers_if_licensed(lvh::get_license_status().license.licensed());
